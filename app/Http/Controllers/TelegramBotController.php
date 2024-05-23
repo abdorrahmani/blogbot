@@ -23,6 +23,7 @@ class TelegramBotController extends Controller
     }
 
     /**
+     *  use webhook method to get latest
      * @throws TelegramSDKException
      * @throws GuzzleException
      * @throws JsonException
@@ -47,13 +48,33 @@ class TelegramBotController extends Controller
     }
 
     /**
+     * use Poll method to get latest
+     * @throws GuzzleException
+     * @throws TelegramSDKException
+     * @throws JsonException
+     */
+    public function handleRequest($update): void
+    {
+        $chatId = $update['message']['chat']['id'] ?? null;
+        $text = $update['message']['text'] ?? '';
+
+        if ($text === '/latest_article') {
+            $article = $this->getLatestArticle();
+            $this->telegram->sendMessage([
+                'chat_id' => $chatId,
+                'text' => $article
+            ]);
+        }
+    }
+
+    /**
      * @throws GuzzleException
      * @throws JsonException
      */
     private function getLatestArticle():string
     {
         $client = new Client();
-        $response = $client->get('YOUR_URL');
+        $response = $client->get('URL_OF_YOUR_ARTICLES_API');
 
         $articles = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
         if (!empty($articles)){
